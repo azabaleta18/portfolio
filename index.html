@@ -454,43 +454,19 @@ function Navbar() {
 function Hero({ heroVideoSrc }) {
   const videoRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
-  const [reverse, setReverse] = useState(false);
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    let raf;
-    const onMeta = () => setLoaded(true);
-    v.addEventListener('loadeddata', onMeta);
-    const tick = () => {
-      if (v && v.duration) {
-        if (!reverse && v.currentTime >= v.duration - 0.05) {
-          setReverse(true);
-        } else if (reverse) {
-          v.currentTime = Math.max(0, v.currentTime - 0.033);
-          if (v.currentTime <= 0.05) {
-            setReverse(false);
-            v.play().catch(() => {});
-          }
-        }
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => { v.removeEventListener('loadeddata', onMeta); cancelAnimationFrame(raf); };
-  }, [reverse]);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (reverse) v.pause();
-    else v.play().catch(() => {});
-  }, [reverse]);
+    const onData = () => { setLoaded(true); v.play().catch(() => {}); };
+    v.addEventListener('loadeddata', onData);
+    return () => v.removeEventListener('loadeddata', onData);
+  }, []);
 
   return (
     <section id="top" className="relative w-full overflow-hidden" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 20%, #102030 0%, #050A14 60%, #02060C 100%)', opacity: loaded ? 0 : 1, transition: 'opacity 0.8s ease', zIndex: 0 }} />
-      <video ref={videoRef} muted autoPlay playsInline preload="auto" className="absolute inset-0 w-full h-full"
+      <video ref={videoRef} muted autoPlay playsInline loop preload="auto" className="absolute inset-0 w-full h-full"
         style={{ objectFit: 'cover', opacity: loaded ? 0.55 : 0, transition: 'opacity 1.2s ease', zIndex: 0 }}>
         <source src={heroVideoSrc} type="video/mp4" />
       </video>
