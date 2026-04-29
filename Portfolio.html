@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Alfonso Zabaleta · Diseño + IA</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400;1,9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          dark: '#050A14',
+          dark2: '#0D1F2D',
+          accent: '#00D4FF',
+          text: '#F0F6FF',
+          muted: '#4A6FA5',
+        },
+        fontFamily: {
+          serif: ['Fraunces', 'serif'],
+          sans: ['Inter', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+/* ===================== TOKENS ===================== */
+:root {
+  --dark: #050A14;
+  --dark2: #0D1F2D;
+  --accent: #00D4FF;
+  --text: #F0F6FF;
+  --muted: #4A6FA5;
+  --border: rgba(0, 212, 255, 0.12);
+  --card: rgba(13, 31, 45, 0.8);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
+  overflow-x: hidden;
+}
+
+body { cursor: none; }
+a, button { cursor: none; }
+
+::selection { background: var(--accent); color: var(--dark); }
+
+.font-serif { font-family: 'Fraunces', Georgia, serif; font-feature-settings: 'ss01'; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+.font-sans { font-family: 'Inter', system-ui, sans-serif; }
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(32px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.reveal { opacity: 0; }
+.reveal.in-view { animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.reveal[style*="--delay"].in-view { animation-delay: var(--delay); }
+
+@keyframes gridScroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(60px); }
+}
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.045) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridScroll 20s linear infinite;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 90%);
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.1); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, 40px) scale(1.15); }
+}
+@keyframes float3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 50px) scale(0.95); }
+}
+.orb { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
+.orb-1 { width: 500px; height: 500px; background: rgba(0, 212, 255, 0.08); top: -100px; left: -150px; animation: float1 8s ease-in-out infinite; }
+.orb-2 { width: 600px; height: 600px; background: rgba(155, 81, 224, 0.06); top: 40%; right: -200px; animation: float2 10s ease-in-out infinite; }
+.orb-3 { width: 450px; height: 450px; background: rgba(34, 211, 175, 0.05); bottom: -100px; left: 30%; animation: float3 9s ease-in-out infinite; }
+
+.cursor-dot, .cursor-ring {
+  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s ease, height 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+  will-change: transform;
+}
+.cursor-dot { width: 8px; height: 8px; background: var(--accent); box-shadow: 0 0 12px rgba(0, 212, 255, 0.6); }
+.cursor-ring {
+  width: 40px; height: 40px; border: 1px solid rgba(0, 212, 255, 0.5);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s ease, height 0.25s ease, border-color 0.25s ease, opacity 0.2s ease;
+}
+.cursor-ring.hover { width: 64px; height: 64px; border-color: rgba(0, 212, 255, 0.9); background: rgba(0, 212, 255, 0.06); }
+.cursor-dot.hover { background: var(--text); }
+@media (max-width: 768px) {
+  body { cursor: auto; }
+  a, button { cursor: pointer; }
+  .cursor-dot, .cursor-ring { display: none; }
+}
+
+.glass { background: var(--card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); }
+
+.btn-primary {
+  background: var(--accent); color: var(--dark); font-weight: 600; padding: 14px 28px;
+  border-radius: 999px; display: inline-flex; align-items: center; gap: 8px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease; border: none;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -8px rgba(0, 212, 255, 0.5); }
+
+.btn-ghost {
+  background: transparent; color: var(--text); border: 1px solid rgba(240, 246, 255, 0.18);
+  padding: 14px 28px; border-radius: 999px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+.btn-ghost:hover { border-color: rgba(0, 212, 255, 0.5); background: rgba(0, 212, 255, 0.04); }
+
+.label-mono {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 38s linear infinite; will-change: transform; }
+.marquee-wrap:hover .marquee-track { animation-play-state: paused; }
+
+@keyframes pulseDot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 175, 0.7); }
+  50% { box-shadow: 0 0 0 8px rgba(34, 211, 175, 0); }
+}
+.dot-pulse { width: 8px; height: 8px; background: #22D3AF; border-radius: 50%; animation: pulseDot 2s ease-in-out infinite; }
+
+@keyframes scrollLine {
+  0% { transform: scaleY(0); transform-origin: top; }
+  50% { transform: scaleY(1); transform-origin: top; }
+  50.01% { transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+.scroll-line { width: 1px; height: 48px; background: linear-gradient(to bottom, transparent, var(--accent), transparent); animation: scrollLine 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+
+@keyframes nodeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.flow-node { animation: nodeFloat 6s ease-in-out infinite; }
+@keyframes flowPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.9; } }
+.flow-line { animation: flowPulse 3s ease-in-out infinite; }
+
+.proj-card { transition: opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease; }
+.proj-card.hidden-filter { opacity: 0; transform: scale(0.95); pointer-events: none; position: absolute; visibility: hidden; }
+.proj-media { position: relative; overflow: hidden; border-radius: 14px; }
+.proj-media .overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(5,10,20,0) 40%, rgba(5,10,20,0.95) 100%);
+  display: flex; align-items: flex-end; justify-content: flex-end; padding: 20px;
+  opacity: 0; transition: opacity 0.35s ease;
+}
+.proj-card:hover .proj-media .overlay { opacity: 1; }
+.proj-card:hover .proj-media .placeholder { transform: scale(1.05); }
+.proj-media .placeholder { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+
+.star { color: #FFD166; }
+.media-stripes {
+  background:
+    repeating-linear-gradient(135deg, rgba(0, 212, 255, 0.06) 0px, rgba(0, 212, 255, 0.06) 1px, transparent 1px, transparent 14px),
+    linear-gradient(135deg, #0D1F2D 0%, #0A1622 100%);
+}
+.tech-pill {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em;
+  padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border);
+  color: var(--muted); background: rgba(0, 212, 255, 0.03);
+}
+.link-row {
+  display: flex; align-items: center; gap: 16px; padding: 22px 24px; border-radius: 14px;
+  background: var(--card); border: 1px solid var(--border);
+  transition: border-color 0.3s ease, transform 0.3s ease, background 0.3s ease;
+}
+.link-row:hover { border-color: rgba(0, 212, 255, 0.4); background: rgba(0, 212, 255, 0.04); transform: translateX(4px); }
+
+input, textarea {
+  font-family: inherit; background: transparent; border: none;
+  border-bottom: 1px solid var(--border); color: var(--text);
+  padding: 14px 0; width: 100%; font-size: 15px; outline: none; transition: border-color 0.3s ease;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: none; min-height: 120px; }
+input::placeholder, textarea::placeholder { color: rgba(74, 111, 165, 0.6); }
+
+.field-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+  display: block; margin-bottom: 6px;
+}
+.nav-scrolled { padding-top: 14px !important; padding-bottom: 14px !important; background: rgba(5, 10, 20, 0.75) !important; }
+.quote-mark {
+  font-family: 'Fraunces', serif; font-style: italic; font-size: 180px; line-height: 0.8;
+  color: var(--accent); opacity: 0.08; position: absolute; top: 8px; left: 16px; pointer-events: none;
+}
+.num-circle {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: var(--accent);
+  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 50%; flex-shrink: 0;
+}
+.pricing-featured { border: 1px solid rgba(0, 212, 255, 0.5) !important; box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.15), 0 30px 80px -30px rgba(0, 212, 255, 0.45); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 212, 255, 0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.3); }
+
+/* ===================== TESTIMONIALS BELT ===================== */
+@keyframes beltLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes beltRight {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.belt-track-left  { animation: beltLeft  40s linear infinite; will-change: transform; }
+.belt-track-right { animation: beltRight 38s linear infinite; will-change: transform; }
+.belt-row:hover .belt-track-left,
+.belt-row:hover .belt-track-right { animation-play-state: paused; }
+
+@keyframes cardGlow {
+  0%, 100% { box-shadow: 0 0 0 1px var(--border); }
+  50%       { box-shadow: 0 0 28px -6px rgba(0, 212, 255, 0.35), 0 0 0 1px rgba(0, 212, 255, 0.25); }
+}
+.testi-card {
+  flex-shrink: 0;
+  width: 360px;
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease;
+}
+.testi-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 60px -20px rgba(0, 212, 255, 0.4), 0 0 0 1px rgba(0, 212, 255, 0.3) !important;
+}
+
+/* ===================== RESPONSIVE ===================== */
+
+/* Tablet (≤1100px): proyecto grande/pequeño → mitad cada uno */
+@media (max-width: 1100px) {
+  .proj-grid > div { grid-column: span 6 !important; }
+}
+
+/* Mobile (≤768px) */
+@media (max-width: 768px) {
+  /* Section padding */
+  .resp-section { padding: 80px 20px !important; }
+  /* Testimonials belt keeps 0 horizontal padding so belt bleeds edge-to-edge */
+  .resp-section.testi-section { padding-left: 0 !important; padding-right: 0 !important; }
+
+  /* Projects: una columna */
+  .proj-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .proj-grid > div { grid-column: 1 / -1 !important; }
+
+  /* Ocultar diagrama de nodos de Automation */
+  .auto-diagram { display: none !important; }
+
+  /* Testimonials belt cards */
+  .testi-card { width: min(82vw, 300px) !important; }
+
+  /* Navbar CTA */
+  .nav-cta { padding: 8px 14px !important; font-size: 12px !important; }
+
+  /* Hero: encajar en pantalla estrecha */
+  .hero-content { padding-top: 90px !important; padding-bottom: 40px !important; }
+  .hero-stats { padding-top: 24px !important; }
+  .hero-stat-num { font-size: 32px !important; }
+
+  /* Services: limitar altura de cards */
+  .service-card { min-height: auto !important; }
+
+  /* Automation grid: single col */
+  .auto-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+
+  /* Footer */
+  .footer-inner { flex-direction: column !important; align-items: flex-start !important; }
+
+  /* Pricing: ya maneja flex-col con Tailwind */
+
+  /* Hero CTA buttons */
+  .hero-btns { flex-direction: column !important; align-items: stretch !important; }
+  .hero-btns a { justify-content: center !important; }
+}
+
+/* Small mobile (≤480px) */
+@media (max-width: 480px) {
+  .resp-section { padding: 60px 16px !important; }
+  .resp-section.testi-section { padding-left: 0 !important; padding-right: 0 !important; }
+  .testi-card { width: min(88vw, 260px) !important; }
+  .hero-stat-num { font-size: 28px !important; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useEffect, useRef, useState, useCallback } = React;
+
+// ===================== useInViewAnimation =====================
+function useInViewAnimation(threshold = 0.1) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return ref;
+}
+
+function Reveal({ as: Tag = 'div', delay = 0, className = '', children, ...rest }) {
+  const ref = useInViewAnimation(0.1);
+  const style = { ...(rest.style || {}), '--delay': `${delay}s` };
+  return (
+    <Tag ref={ref} className={`reveal ${className}`} {...rest} style={style}>
+      {children}
+    </Tag>
+  );
+}
+
+// ===================== CustomCursor =====================
+function CustomCursor() {
+  const dotRef = useRef(null);
+  const ringRef = useRef(null);
+  useEffect(() => {
+    const dot = dotRef.current;
+    const ring = ringRef.current;
+    if (!dot || !ring) return;
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let rx = mx, ry = my;
+    let raf;
+    const onMove = (e) => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
+    };
+    const tick = () => {
+      rx += (mx - rx) * 0.18;
+      ry += (my - ry) * 0.18;
+      ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    const handleOver = (e) => {
+      if (e.target.closest('a, button, [data-hover], input, textarea, .proj-card')) {
+        ring.classList.add('hover'); dot.classList.add('hover');
+      }
+    };
+    const handleOut = (e) => {
+      if (e.target.closest('a, button, [data-hover], input, textarea, .proj-card')) {
+        ring.classList.remove('hover'); dot.classList.remove('hover');
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseover', handleOver);
+    document.addEventListener('mouseout', handleOut);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseover', handleOver);
+      document.removeEventListener('mouseout', handleOut);
+    };
+  }, []);
+  return (
+    <>
+      <div ref={dotRef} className="cursor-dot" />
+      <div ref={ringRef} className="cursor-ring" />
+    </>
+  );
+}
+
+// ===================== Navbar =====================
+function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  const navLinks = [
+    { label: 'Servicios', href: '#services' },
+    { label: 'Proyectos', href: '#projects' },
+    { label: 'IA', href: '#automation' },
+    { label: 'Precios', href: '#pricing' },
+  ];
+  return (
+    <nav
+      className={`fixed top-0 left-0 right-0 z-40 px-8 md:px-12 transition-all duration-300 ${scrolled ? 'nav-scrolled' : ''}`}
+      style={{ paddingTop: 22, paddingBottom: 22, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', background: 'rgba(5, 10, 20, 0.55)', borderBottom: '1px solid var(--border)' }}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <a href="#top" className="font-serif text-2xl tracking-tight" style={{ fontStyle: 'italic', fontWeight: 700 }}>AZ</a>
+        <div className="hidden md:flex items-center gap-10">
+          {navLinks.map((l) => (
+            <a key={l.href} href={l.href} className="text-sm font-medium transition-colors"
+              style={{ color: 'rgba(240,246,255,0.7)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(240,246,255,0.7)'}
+            >{l.label}</a>
+          ))}
+        </div>
+        <a href="#contact" className="btn-primary nav-cta text-sm" style={{ padding: '10px 22px' }}>
+          Hablemos
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </nav>
+  );
+}
+
+// ===================== Hero =====================
+function Hero({ heroVideoSrc }) {
+  const videoRef = useRef(null);
+  const [loaded, setLoaded] = useState(false);
+  const [reverse, setReverse] = useState(false);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    let raf;
+    const onMeta = () => setLoaded(true);
+    v.addEventListener('loadeddata', onMeta);
+    const tick = () => {
+      if (v && v.duration) {
+        if (!reverse && v.currentTime >= v.duration - 0.05) {
+          setReverse(true);
+        } else if (reverse) {
+          v.currentTime = Math.max(0, v.currentTime - 0.033);
+          if (v.currentTime <= 0.05) {
+            setReverse(false);
+            v.play().catch(() => {});
+          }
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => { v.removeEventListener('loadeddata', onMeta); cancelAnimationFrame(raf); };
+  }, [reverse]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (reverse) v.pause();
+    else v.play().catch(() => {});
+  }, [reverse]);
+
+  return (
+    <section id="top" className="relative w-full overflow-hidden" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 20%, #102030 0%, #050A14 60%, #02060C 100%)', opacity: loaded ? 0 : 1, transition: 'opacity 0.8s ease', zIndex: 0 }} />
+      <video ref={videoRef} muted autoPlay playsInline preload="auto" className="absolute inset-0 w-full h-full"
+        style={{ objectFit: 'cover', opacity: loaded ? 0.55 : 0, transition: 'opacity 1.2s ease', zIndex: 0 }}>
+        <source src={heroVideoSrc} type="video/mp4" />
+      </video>
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,10,20,0.65) 0%, rgba(5,10,20,0.45) 40%, rgba(5,10,20,0.95) 100%)', zIndex: 1 }} />
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(5,10,20,0.6) 90%)', zIndex: 1 }} />
+
+      <div className="hero-content relative max-w-6xl mx-auto px-8 md:px-12 w-full text-center" style={{ zIndex: 2, paddingTop: 120, paddingBottom: 60 }}>
+        <Reveal delay={0} className="inline-flex items-center gap-3 glass" style={{ padding: '8px 16px', borderRadius: 999, marginBottom: 36 }}>
+          <span className="dot-pulse" />
+          <span className="font-mono" style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(240,246,255,0.85)' }}>Disponible para nuevos proyectos</span>
+        </Reveal>
+
+        <Reveal delay={0.1} as="h1" className="font-serif" style={{ fontSize: 'clamp(56px, 8vw, 120px)', fontWeight: 700, lineHeight: 0.96, letterSpacing: '-0.025em', marginBottom: 32 }}>
+          <span style={{ display: 'block' }}>Diseño que convierte.</span>
+          <span style={{ display: 'block', fontStyle: 'italic', color: 'rgba(240,246,255,0.78)' }}>Sistemas que trabajan solos.</span>
+        </Reveal>
+
+        <Reveal delay={0.2} as="p" className="mx-auto" style={{ maxWidth: 560, fontSize: 17, lineHeight: 1.6, color: 'var(--muted)', marginBottom: 44 }}>
+          Diseño y desarrollo páginas web que venden, y construyo flujos de automatización con IA para que tu negocio funcione sin que tengas que estar encima.
+        </Reveal>
+
+        <Reveal delay={0.3} className="hero-btns flex flex-wrap items-center justify-center gap-4" style={{ marginBottom: 80 }}>
+          <a href="#contact" className="btn-primary">
+            Empezar un proyecto
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#projects" className="btn-ghost">Ver proyectos</a>
+        </Reveal>
+
+        <Reveal delay={0.45} className="hero-stats grid grid-cols-3 gap-6 max-w-2xl mx-auto" style={{ paddingTop: 36, borderTop: '1px solid var(--border)' }}>
+          {[{ n: '20+', l: 'Proyectos' }, { n: '100%', l: 'Satisfacción' }, { n: '3×', l: 'ROI promedio' }].map((s) => (
+            <div key={s.l}>
+              <div className="hero-stat-num font-serif" style={{ fontSize: 44, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.02em' }}>{s.n}</div>
+              <div className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: 8 }}>{s.l}</div>
+            </div>
+          ))}
+        </Reveal>
+      </div>
+
+      <div className="absolute left-1/2" style={{ bottom: 32, transform: 'translateX(-50%)', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        <div className="scroll-line" />
+        <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--muted)' }}>Scroll</span>
+      </div>
+    </section>
+  );
+}
+
+// ===================== Marquee =====================
+function Marquee() {
+  const items = ['Diseño Web', 'Automatización IA', 'Agentes IA', 'Landing Pages', 'Make / n8n / Zapier', 'Chatbots', 'Dashboards', 'UI / UX'];
+  const all = [...items, ...items];
+  return (
+    <section className="relative marquee-wrap" style={{ padding: '60px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+      <div className="overflow-hidden">
+        <div className="marquee-track flex items-center gap-3 whitespace-nowrap" style={{ width: 'max-content' }}>
+          {all.map((it, i) => (
+            <span key={i} className="inline-flex items-center gap-2.5 font-mono" style={{ padding: '10px 22px', border: '1px solid var(--border)', borderRadius: 999, fontSize: 13, letterSpacing: '0.04em', color: 'rgba(240,246,255,0.85)', background: 'rgba(13,31,45,0.4)' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} />
+              {it}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ===================== Services =====================
+function Services() {
+  const items = [
+    { icon: '🎨', bg: 'rgba(0, 212, 255, 0.12)', border: 'rgba(0, 212, 255, 0.3)', title: 'Diseño & Desarrollo Web', desc: 'Sitios web y landing pages diseñadas para vender. Performance, SEO, conversión y una identidad que se diferencia.', tags: ['Webflow', 'React', 'UI/UX', 'E-commerce'] },
+    { icon: '🤖', bg: 'rgba(155, 81, 224, 0.12)', border: 'rgba(155, 81, 224, 0.3)', title: 'Automatización con IA', desc: 'Agentes de IA y workflows que atienden clientes, califican leads y mueven datos entre tus herramientas 24/7.', tags: ['Make', 'n8n', 'GPT-4', 'Zapier'] },
+    { icon: '⚡', bg: 'rgba(34, 211, 175, 0.12)', border: 'rgba(34, 211, 175, 0.3)', title: 'Sistemas & Procesos', desc: 'Conectamos tu CRM, base de datos y herramientas internas. Procesos claros, sin tareas repetitivas.', tags: ['CRM', 'Notion', 'Airtable', 'APIs'] },
+  ];
+  return (
+    <section id="services" className="relative resp-section" style={{ padding: '140px 32px' }}>
+      <div className="max-w-7xl mx-auto">
+        <Reveal className="flex items-end justify-between mb-16 flex-wrap gap-6">
+          <div>
+            <div className="label-mono" style={{ marginBottom: 16 }}>— Servicios</div>
+            <h2 className="font-serif" style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.02em', maxWidth: 720 }}>
+              Tres formas de <em style={{ color: 'rgba(240,246,255,0.7)' }}>multiplicar</em> tu negocio.
+            </h2>
+          </div>
+          <p style={{ maxWidth: 320, color: 'var(--muted)', fontSize: 15, lineHeight: 1.6 }}>Cada proyecto se piensa como un sistema: diseño, automatización y procesos trabajando en conjunto.</p>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-6">
+          {items.map((s, i) => (
+            <Reveal key={s.title} delay={0.1 + i * 0.1} className="service-card glass" style={{ padding: 32, borderRadius: 20, display: 'flex', flexDirection: 'column', gap: 20, minHeight: 380, transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.35s ease' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = 'rgba(0,212,255,0.3)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+            >
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: s.bg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{s.icon}</div>
+              <h3 className="font-serif" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.015em', lineHeight: 1.15 }}>{s.title}</h3>
+              <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.6, flex: 1 }}>{s.desc}</p>
+              <div className="flex flex-wrap gap-2">{s.tags.map((t) => <span key={t} className="tech-pill">{t}</span>)}</div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ===================== Projects =====================
+function ProjectVisual({ project, accent }) {
+  if (project.label === 'E-commerce') {
+    return (
+      <div style={{ width: '85%', maxWidth: 420 }}>
+        <div className="glass" style={{ padding: 12, borderRadius: 12, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          {[0,1,2,3,4,5].map(i => <div key={i} style={{ aspectRatio: '1/1.2', borderRadius: 8, background: `linear-gradient(135deg, rgba(0,212,255,${0.06 + (i%3)*0.04}) 0%, rgba(13,31,45,0.9) 100%)`, border: '1px solid var(--border)' }} />)}
+        </div>
+      </div>
+    );
+  }
+  if (project.label === 'Dashboard') {
+    return (
+      <div style={{ width: '85%', maxWidth: 380, padding: 14, borderRadius: 12, background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <div className="flex justify-between items-end" style={{ height: 80, gap: 6 }}>
+          {[40,65,35,80,55,90,72,60,85].map((h, i) => <div key={i} style={{ flex: 1, height: `${h}%`, background: `linear-gradient(180deg, ${accent} 0%, rgba(0,212,255,0.2) 100%)`, borderRadius: 3 }} />)}
+        </div>
+        <div style={{ marginTop: 14, height: 1, background: 'var(--border)' }} />
+        <div className="flex gap-2 mt-3">
+          <div style={{ width: 50, height: 6, background: 'rgba(0,212,255,0.5)', borderRadius: 2 }} />
+          <div style={{ width: 30, height: 6, background: 'var(--border)', borderRadius: 2 }} />
+        </div>
+      </div>
+    );
+  }
+  if (project.label === 'Landing') {
+    return (
+      <div style={{ width: '85%', maxWidth: 420, padding: 18, borderRadius: 12, background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <div style={{ width: 60, height: 8, background: accent, borderRadius: 2, marginBottom: 12 }} />
+        <div style={{ width: '90%', height: 18, background: 'rgba(240,246,255,0.5)', borderRadius: 3, marginBottom: 8 }} />
+        <div style={{ width: '70%', height: 18, background: 'rgba(240,246,255,0.3)', borderRadius: 3, marginBottom: 16 }} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ width: 80, height: 24, background: accent, borderRadius: 999 }} />
+          <div style={{ width: 80, height: 24, border: '1px solid var(--border)', borderRadius: 999 }} />
+        </div>
+      </div>
+    );
+  }
+  if (project.label === 'Agente IA' || project.label === 'CRM') {
+    return (
+      <div style={{ width: '85%', maxWidth: 280 }}>
+        <div className="glass" style={{ padding: 12, borderRadius: 12, marginBottom: 8, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <div style={{ width: 24, height: 24, borderRadius: 6, background: accent, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🤖</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ height: 6, background: 'rgba(240,246,255,0.6)', borderRadius: 2, marginBottom: 4, width: '80%' }} />
+            <div style={{ height: 6, background: 'rgba(240,246,255,0.3)', borderRadius: 2, width: '60%' }} />
+          </div>
+        </div>
+        <div className="glass" style={{ padding: 12, borderRadius: 12, marginLeft: 32, background: `${accent}20`, border: `1px solid ${accent}55` }}>
+          <div style={{ height: 6, background: 'rgba(240,246,255,0.6)', borderRadius: 2, marginBottom: 4, width: '70%' }} />
+          <div style={{ height: 6, background: 'rgba(240,246,255,0.3)', borderRadius: 2, width: '50%' }} />
+        </div>
+      </div>
+    );
+  }
+  if (project.label === 'Workflow') {
+    return (
+      <div style={{ width: '85%', maxWidth: 380, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {['📥','⚙️','🤖','✅'].map((emo, i, arr) => (
+          <React.Fragment key={i}>
+            <div className="glass" style={{ width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{emo}</div>
+            {i < arr.length - 1 && <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, var(--border), ${accent}, var(--border))`, margin: '0 4px' }} />}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+  return <div style={{ width: 60, height: 60, background: accent, borderRadius: 12 }} />;
+}
+
+function ProjectCard({ p }) {
+  const accentColors = { cyan: '#00D4FF', purple: '#9B51E0', teal: '#22D3AF' };
+  return (
+    <a href="#" className="proj-card glass block" style={{ padding: 14, borderRadius: 20, display: 'flex', flexDirection: 'column', height: '100%', gap: 16, transition: 'border-color 0.35s ease, transform 0.35s ease' }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.35)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; }}
+    >
+      <div className="proj-media media-stripes" style={{ height: p.h - 100, minHeight: 180 }}>
+        <div className="placeholder absolute inset-0 flex items-center justify-center">
+          <ProjectVisual project={p} accent={accentColors[p.accent]} />
+        </div>
+        <div className="overlay">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 999, background: 'var(--accent)', color: 'var(--dark)', fontWeight: 600, fontSize: 13 }}>
+            Ver caso
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 17L17 7M9 7h8v8"/></svg>
+          </div>
+        </div>
+      </div>
+      <div style={{ padding: '4px 10px 10px' }}>
+        <div className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 8 }}>{p.label}</div>
+        <h3 className="font-serif" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.015em', lineHeight: 1.1, marginBottom: 6 }}>{p.name}</h3>
+        <p style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.55 }}>{p.desc}</p>
+      </div>
+    </a>
+  );
+}
+
+function Projects() {
+  const [filter, setFilter] = useState('all');
+  const filters = [{ id: 'all', label: 'Todos' }, { id: 'web', label: 'Diseño Web' }, { id: 'ia', label: 'IA & Automatización' }];
+  const projects = [
+    { id: 1, type: 'web', label: 'E-commerce', name: 'Boutique Online', desc: 'E-commerce con +240% conversiones', span: 8, h: 420, accent: 'cyan' },
+    { id: 2, type: 'ia', label: 'Agente IA', name: 'Asistente IA 24/7', desc: 'Chatbot que atiende 300 consultas/mes', span: 4, h: 420, accent: 'purple' },
+    { id: 3, type: 'web', label: 'Dashboard', name: 'Panel Analytics', desc: 'Dashboard SaaS tiempo real', span: 6, h: 320, accent: 'cyan' },
+    { id: 4, type: 'ia', label: 'Workflow', name: 'Flujos de Negocio', desc: 'Automatización retail –12h/semana', span: 6, h: 320, accent: 'teal' },
+    { id: 5, type: 'web', label: 'Landing', name: 'Landing Page Pro', desc: 'CRO optimizada · 8.4% conversión', span: 8, h: 360, accent: 'cyan' },
+    { id: 6, type: 'ia', label: 'CRM', name: 'CRM Personalizado', desc: '500+ contactos gestionados auto', span: 4, h: 360, accent: 'purple' },
+  ];
+  const visible = (p) => filter === 'all' || p.type === filter;
+  return (
+    <section id="projects" className="relative resp-section" style={{ padding: '140px 32px' }}>
+      <div className="max-w-7xl mx-auto">
+        <Reveal className="flex items-end justify-between mb-12 flex-wrap gap-6">
+          <div>
+            <div className="label-mono" style={{ marginBottom: 16 }}>— Proyectos seleccionados</div>
+            <h2 className="font-serif" style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.02em' }}>Trabajos <em style={{ color: 'rgba(240,246,255,0.7)' }}>recientes</em>.</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {filters.map((f) => (
+              <button key={f.id} onClick={() => setFilter(f.id)} className="font-mono" style={{ padding: '10px 18px', borderRadius: 999, fontSize: 12, letterSpacing: '0.05em', border: filter === f.id ? '1px solid var(--accent)' : '1px solid var(--border)', background: filter === f.id ? 'rgba(0,212,255,0.12)' : 'transparent', color: filter === f.id ? 'var(--accent)' : 'rgba(240,246,255,0.7)', transition: 'all 0.25s ease' }}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </Reveal>
+        <div className="proj-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 24 }}>
+          {projects.map((p, i) => (
+            <Reveal key={p.id} delay={0.05 + i * 0.07} className={`proj-card ${visible(p) ? '' : 'hidden-filter'}`} style={{ gridColumn: `span ${p.span}` }}>
+              <ProjectCard p={p} />
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ===================== Automation =====================
+function Automation() {
+  const features = [
+    { n: '01', title: 'Captura de leads automática', desc: 'Formularios, WhatsApp y email se sincronizan con tu CRM en segundos, sin perder un dato.' },
+    { n: '02', title: 'Agentes IA conversando 24/7', desc: 'Califican consultas, agendan reuniones y escalan al humano sólo cuando hace falta.' },
+    { n: '03', title: 'Reportes y tareas sin tocarlos', desc: 'La IA arma reportes diarios, mueve datos entre herramientas y te avisa lo importante.' },
+  ];
+  const nodes = [
+    { id: 'a', label: 'Gmail / Outlook', icon: '📧', top: 4, left: 6, delay: 0 },
+    { id: 'b', label: 'WhatsApp / Telegram', icon: '💬', top: 4, left: 60, delay: 0.6 },
+    { id: 'c', label: 'Agente IA', icon: '🤖', top: 38, left: 32, delay: 1.2, highlight: 'cyan' },
+    { id: 'd', label: 'Google Sheets', icon: '📊', top: 70, left: 2, delay: 1.8 },
+    { id: 'e', label: 'CRM / Notion', icon: '🗂️', top: 70, left: 56, delay: 2.4 },
+    { id: 'f', label: 'Tarea completada', icon: '✅', top: 90, left: 30, delay: 3.0, highlight: 'green' },
+  ];
+  const lines = [{ from: 'a', to: 'c' }, { from: 'b', to: 'c' }, { from: 'c', to: 'd' }, { from: 'c', to: 'e' }, { from: 'd', to: 'f' }, { from: 'e', to: 'f' }];
+  return (
+    <section id="automation" className="relative resp-section" style={{ padding: '140px 32px' }}>
+      <div className="auto-grid max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-start">
+        <Reveal>
+          <div className="label-mono" style={{ marginBottom: 16 }}>— IA & Automatización</div>
+          <h2 className="font-serif" style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: 24 }}>
+            Tu negocio, <em style={{ color: 'rgba(240,246,255,0.7)' }}>en piloto automático</em>.
+          </h2>
+          <p style={{ color: 'var(--muted)', fontSize: 16, lineHeight: 1.7, marginBottom: 40, maxWidth: 480 }}>Diseño workflows con Make, n8n, Zapier y modelos GPT-4 para que las tareas repetitivas dejen de ser tu trabajo.</p>
+          <div className="flex flex-col gap-6">
+            {features.map((f, i) => (
+              <Reveal key={f.n} delay={0.1 + i * 0.1} className="flex gap-5 items-start">
+                <span className="num-circle">{f.n}</span>
+                <div>
+                  <h4 className="font-serif" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 6 }}>{f.title}</h4>
+                  <p style={{ color: 'var(--muted)', fontSize: 14.5, lineHeight: 1.6 }}>{f.desc}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </Reveal>
+        <Reveal delay={0.2} className="auto-diagram relative" style={{ height: 540, minHeight: 480 }}>
+          <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }} preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="flowGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="rgba(0,212,255,0.0)" />
+                <stop offset="50%" stopColor="rgba(0,212,255,0.6)" />
+                <stop offset="100%" stopColor="rgba(0,212,255,0.0)" />
+              </linearGradient>
+            </defs>
+            {lines.map((l, i) => {
+              const a = nodes.find(n => n.id === l.from);
+              const b = nodes.find(n => n.id === l.to);
+              return <line key={i} className="flow-line" x1={`${a.left + 12}%`} y1={`${a.top + 6}%`} x2={`${b.left + 12}%`} y2={`${b.top + 6}%`} stroke="url(#flowGrad)" strokeWidth="1.5" strokeDasharray="4 5" style={{ animationDelay: `${i * 0.4}s` }} />;
+            })}
+          </svg>
+          {nodes.map((n) => {
+            const highlight = n.highlight === 'cyan'
+              ? { border: '1px solid rgba(0,212,255,0.5)', background: 'rgba(0,212,255,0.08)', boxShadow: '0 0 32px -8px rgba(0,212,255,0.5)' }
+              : n.highlight === 'green'
+              ? { border: '1px solid rgba(34,211,175,0.5)', background: 'rgba(34,211,175,0.08)', boxShadow: '0 0 32px -8px rgba(34,211,175,0.5)' }
+              : {};
+            return (
+              <div key={n.id} className="flow-node glass absolute" style={{ top: `${n.top}%`, left: `${n.left}%`, padding: '12px 16px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10, zIndex: 2, animationDelay: `${n.delay}s`, minWidth: 160, ...highlight }}>
+                <span style={{ fontSize: 18 }}>{n.icon}</span>
+                <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.04em', color: n.highlight ? 'var(--text)' : 'rgba(240,246,255,0.85)' }}>{n.label}</span>
+              </div>
+            );
+          })}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+// ===================== Testimonials =====================
+function TestiCard({ t, style }) {
+  return (
+    <div className="testi-card glass relative" style={{ padding: 28, borderRadius: 20, display: 'flex', flexDirection: 'column', gap: 16, ...style }}>
+      <span className="quote-mark">"</span>
+      <div className="flex gap-1" style={{ position: 'relative', zIndex: 1 }}>
+        {[...Array(5)].map((_, s) => <svg key={s} className="star" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 .8-5.5 4.7L18 22l-6-3.5L6 22l1.5-7.5L2 9.8 9 9z"/></svg>)}
+      </div>
+      <p style={{ position: 'relative', zIndex: 1, fontSize: 14.5, lineHeight: 1.65, color: 'rgba(240,246,255,0.88)', flex: 1 }}>"{t.quote}"</p>
+      <div className="flex items-center gap-3" style={{ position: 'relative', zIndex: 1, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: t.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 12, color: '#050A14', flexShrink: 0 }}>{t.initials}</div>
+        <div>
+          <div style={{ fontSize: 13.5, fontWeight: 600 }}>{t.name}</div>
+          <div className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.04em', color: 'var(--muted)' }}>{t.role}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Testimonials() {
+  const all = [
+    { quote: 'En tres semanas tenía mi sitio nuevo y un agente IA contestando consultas mientras dormía. Vendí más en un mes que en todo el trimestre anterior.', name: 'María Acosta', role: 'Boutique Nordeste', initials: 'MA', grad: 'linear-gradient(135deg, #00D4FF 0%, #9B51E0 100%)' },
+    { quote: 'Alfonso piensa el negocio antes de tocar una herramienta. Diseñó procesos que nos ahorraron 12 horas a la semana sin contratar a nadie más.', name: 'Sebastián Rocha', role: 'Director, Logística Sur', initials: 'SR', grad: 'linear-gradient(135deg, #22D3AF 0%, #00D4FF 100%)' },
+    { quote: 'El landing convirtió un 8% desde la primera semana. Lo que más valoro es que entiende qué tiene que decir un sitio para que la gente compre.', name: 'Lucía Fernández', role: 'Co-founder, Estudio Lince', initials: 'LF', grad: 'linear-gradient(135deg, #9B51E0 0%, #00D4FF 100%)' },
+    { quote: 'Implementó en dos semanas lo que teníamos planeado para seis meses. Los flujos de Make que armó nos cambiaron la operación por completo.', name: 'Diego Martínez', role: 'CEO, AgriData', initials: 'DM', grad: 'linear-gradient(135deg, #00D4FF 0%, #22D3AF 100%)' },
+    { quote: 'Nuestra web pasó de ser un folleto digital a generar consultas todos los días. Clarísimo en qué hacer y por qué funciona.', name: 'Carolina Pérez', role: 'Directora, Clínica Bio', initials: 'CP', grad: 'linear-gradient(135deg, #9B51E0 0%, #22D3AF 100%)' },
+    { quote: 'El agente de WhatsApp maneja el 70% de consultas solo. Nuestro equipo ahora foca en cerrar, no en responder lo mismo 40 veces al día.', name: 'Tomás Ibarra', role: 'Fundador, PropTech BA', initials: 'TI', grad: 'linear-gradient(135deg, #00D4FF 0%, #9B51E0 100%)' },
+  ];
+
+  // Row 1: indices 0-2, Row 2: indices 3-5 — each duplicated for seamless loop
+  const row1 = [...all.slice(0, 3), ...all.slice(0, 3)];
+  const row2 = [...all.slice(3), ...all.slice(3)];
+
+  const fadeEdge = {
+    WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
+    maskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
+  };
+
+  return (
+    <section className="relative resp-section testi-section" style={{ padding: '140px 0' }}>
+      <div className="max-w-7xl mx-auto px-8 md:px-12">
+        <Reveal className="mb-16">
+          <div className="label-mono" style={{ marginBottom: 16 }}>— Testimonios</div>
+          <h2 className="font-serif" style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.02em', maxWidth: 780 }}>
+            Clientes que volvieron a <em style={{ color: 'rgba(240,246,255,0.7)' }}>elegirme</em>.
+          </h2>
+        </Reveal>
+      </div>
+
+      {/* Row 1 — scrolls left */}
+      <div className="belt-row overflow-hidden" style={{ marginBottom: 20, ...fadeEdge }}>
+        <div className="belt-track-left flex gap-5" style={{ width: 'max-content' }}>
+          {row1.map((t, i) => <TestiCard key={i} t={t} />)}
+        </div>
+      </div>
+
+      {/* Row 2 — scrolls right */}
+      <div className="belt-row overflow-hidden" style={{ ...fadeEdge }}>
+        <div className="belt-track-right flex gap-5" style={{ width: 'max-content' }}>
+          {row2.map((t, i) => <TestiCard key={i} t={t} />)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ===================== Pricing =====================
+function Pricing() {
+  const cardA = { label: 'Proyecto único', price: 'A consultar', desc: 'Para una entrega específica: web, landing o automatización puntual.', features: ['Briefing y propuesta a medida', 'Diseño + desarrollo + lanzamiento', 'Hasta 2 rondas de revisión', '30 días de soporte post-launch'], cta: 'Pedir cotización', primary: false };
+  const cardB = { label: 'Socio mensual', price: '$800', sub: 'USD / mes', desc: 'Diseño, IA y mejoras continuas. Como tener un equipo, sin contratarlo.', features: ['Iteraciones semanales priorizadas', 'Mantenimiento de webs y agentes IA', 'Nuevas automatizaciones cada mes', 'Reuniones quincenales 1:1', 'Slack compartido + soporte rápido'], cta: 'Empezar el mes', primary: true };
+  const Card = ({ c }) => (
+    <div className={`glass ${c.primary ? 'pricing-featured' : ''}`} style={{ flex: 1, padding: 36, borderRadius: 22, position: 'relative', display: 'flex', flexDirection: 'column', gap: 22 }}>
+      {c.primary && <span className="font-mono absolute" style={{ top: -12, left: 32, padding: '6px 14px', borderRadius: 999, background: 'var(--accent)', color: 'var(--dark)', fontSize: 10.5, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 600 }}>Popular</span>}
+      <div>
+        <div className="font-mono" style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 16 }}>{c.label}</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <span className="font-serif" style={{ fontSize: 56, fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1 }}>{c.price}</span>
+          {c.sub && <span className="font-mono" style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '0.05em' }}>{c.sub}</span>}
+        </div>
+        <p style={{ color: 'var(--muted)', fontSize: 14.5, lineHeight: 1.6, marginTop: 14 }}>{c.desc}</p>
+      </div>
+      <div style={{ height: 1, background: 'var(--border)' }} />
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+        {c.features.map((f) => (
+          <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontSize: 14.5, color: 'rgba(240,246,255,0.9)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={c.primary ? '#00D4FF' : 'rgba(240,246,255,0.5)'} strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 3 }}><path d="M5 12l5 5L20 7" /></svg>
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+      <a href="#contact" className={c.primary ? 'btn-primary' : 'btn-ghost'} style={{ justifyContent: 'center' }}>
+        {c.cta}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  );
+  return (
+    <section id="pricing" className="relative resp-section" style={{ padding: '140px 32px' }}>
+      <div className="max-w-5xl mx-auto">
+        <Reveal className="text-center mb-16">
+          <div className="label-mono" style={{ marginBottom: 16 }}>— Cómo trabajamos</div>
+          <h2 className="font-serif mx-auto" style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.02em', maxWidth: 720 }}>Dos formas de <em style={{ color: 'rgba(240,246,255,0.7)' }}>arrancar</em>.</h2>
+        </Reveal>
+        <div className="flex flex-col md:flex-row gap-6" style={{ maxWidth: 900, margin: '0 auto' }}>
+          <Reveal delay={0.1} style={{ display: 'flex', flex: 1 }}><Card c={cardA} /></Reveal>
+          <Reveal delay={0.2} style={{ display: 'flex', flex: 1 }}><Card c={cardB} /></Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ===================== Contact =====================
+function Contact() {
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ nombre: '', email: '', mensaje: '' });
+  const onSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 4000);
+    setForm({ nombre: '', email: '', mensaje: '' });
+  };
+  const links = [
+    { icon: '✉️', label: 'Email', value: 'hola@alfonsozabaleta.com', href: 'mailto:hola@alfonsozabaleta.com' },
+    { icon: '💬', label: 'WhatsApp', value: '+598 99 123 456', href: '#' },
+    { icon: '🔗', label: 'LinkedIn', value: 'linkedin.com/in/azabaleta', href: '#' },
+  ];
+  return (
+    <section id="contact" className="relative resp-section" style={{ padding: '140px 32px' }}>
+      <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16">
+        <Reveal>
+          <div className="label-mono" style={{ marginBottom: 16 }}>— Contacto</div>
+          <h2 className="font-serif" style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: 28 }}>Hagamos algo <em style={{ color: 'rgba(240,246,255,0.7)' }}>juntos</em>.</h2>
+          <p style={{ color: 'var(--muted)', fontSize: 16, lineHeight: 1.7, marginBottom: 40, maxWidth: 460 }}>Contame qué necesitás. Si calza con lo que hago, te respondo en menos de 24 horas con una propuesta concreta.</p>
+          <div className="flex flex-col gap-3">
+            {links.map((l, i) => (
+              <Reveal key={l.label} delay={0.1 + i * 0.08}>
+                <a href={l.href} className="link-row">
+                  <span style={{ fontSize: 20 }}>{l.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <div className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 4 }}>{l.label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 500 }}>{l.value}</div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--muted)' }}><path d="M7 17L17 7M9 7h8v8" /></svg>
+                </a>
+              </Reveal>
+            ))}
+          </div>
+        </Reveal>
+        <Reveal delay={0.15}>
+          <form onSubmit={onSubmit} className="glass" style={{ padding: 36, borderRadius: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div><label className="field-label">Nombre</label><input type="text" placeholder="Cómo te llamás" required value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></div>
+            <div><label className="field-label">Email</label><input type="email" placeholder="tu@correo.com" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+            <div><label className="field-label">Mensaje</label><textarea placeholder="Contame el proyecto, el problema o el plazo" required value={form.mensaje} onChange={(e) => setForm({ ...form, mensaje: e.target.value })} /></div>
+            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: 8 }}>
+              {submitted ? '✓ Mensaje enviado' : 'Enviar mensaje'}
+              {!submitted && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+            </button>
+          </form>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+// ===================== Footer =====================
+function Footer() {
+  const links = [{ label: 'Servicios', href: '#services' }, { label: 'Proyectos', href: '#projects' }, { label: 'IA', href: '#automation' }, { label: 'Precios', href: '#pricing' }, { label: 'Contacto', href: '#contact' }];
+  return (
+    <footer style={{ borderTop: '1px solid var(--border)', padding: '36px 32px', background: 'rgba(5, 10, 20, 0.6)' }}>
+      <div className="footer-inner max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-6">
+        <a href="#top" className="font-serif" style={{ fontSize: 22, fontWeight: 700, fontStyle: 'italic', letterSpacing: '-0.01em' }}>Alfonso Zabaleta</a>
+        <div className="flex flex-wrap gap-8">
+          {links.map((l) => <a key={l.href} href={l.href} className="font-mono" style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(240,246,255,0.65)' }}>{l.label}</a>)}
+        </div>
+        <span className="font-mono" style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--muted)' }}>© 2026 · Montevideo, UY</span>
+      </div>
+    </footer>
+  );
+}
+
+// ===================== BottomNav =====================
+function BottomNav() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > window.innerHeight * 0.6);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return (
+    <div className="fixed left-1/2 z-50" style={{ bottom: 24, transform: `translateX(-50%) translateY(${visible ? 0 : 80}px)`, opacity: visible ? 1 : 0, transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 10px 10px 22px', borderRadius: 999, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', background: 'rgba(13, 31, 45, 0.85)', border: '1px solid var(--border)', boxShadow: '0 24px 60px -20px rgba(0, 0, 0, 0.6)' }}>
+      <span className="font-serif" style={{ fontSize: 16, fontWeight: 700, fontStyle: 'italic', whiteSpace: 'nowrap' }}>Alfonso Zabaleta</span>
+      <a href="#contact" className="btn-primary" style={{ padding: '8px 18px', fontSize: 13 }}>
+        Hablemos
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  );
+}
+
+// ===================== App =====================
+function App() {
+  return (
+    <>
+      <CustomCursor />
+      <div className="bg-grid" />
+      <div className="orb orb-1" />
+      <div className="orb orb-2" />
+      <div className="orb orb-3" />
+      <Navbar />
+      <main style={{ position: 'relative', zIndex: 1 }}>
+        <Hero heroVideoSrc="src/assets/heroVideoSrc.mp4" />
+        <Marquee />
+        <Services />
+        <Projects />
+        <Automation />
+        <Testimonials />
+        <Pricing />
+        <Contact />
+      </main>
+      <Footer />
+      <BottomNav />
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
