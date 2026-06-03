@@ -156,7 +156,24 @@
     }
   }
 
+  // Mapa id -> proyecto completo (para acceder a gallery/video en el detalle)
+  const projectsById = {};
+
+  function asArray(v) {
+    if (Array.isArray(v)) return v;
+    if (typeof v === "string" && v.trim()) {
+      try {
+        const parsed = JSON.parse(v);
+        return Array.isArray(parsed) ? parsed : [v];
+      } catch {
+        return v.split(",").map(s => s.trim()).filter(Boolean);
+      }
+    }
+    return [];
+  }
+
   function renderProjects(projects) {
+    projects.forEach(p => { projectsById[p.id] = p; });
     grid.innerHTML = projects.map((p, i) => `
       <div class="project" data-reveal data-delay="${i * 120}"
         data-id="${esc(p.id)}"
@@ -205,8 +222,29 @@
   const overlayCrumb = document.getElementById("proj-overlay-crumb");
   const overlayClose = document.getElementById("proj-close");
 
+  function buildVisual(p, title) {
+    const parts = [];
+    if (p.video) {
+      parts.push(`<video class="proj-video" src="${esc(p.video)}" controls preload="metadata" playsinline></video>`);
+    }
+    if (p.img) {
+      parts.push(`<img class="proj-cover" src="${esc(p.img)}" alt="${esc(title)}" loading="lazy">`);
+    }
+    const gallery = asArray(p.gallery);
+    if (gallery.length) {
+      parts.push(`<div class="proj-gallery">${
+        gallery.map(url => `<img src="${esc(url)}" alt="${esc(title)}" loading="lazy">`).join("")
+      }</div>`);
+    }
+    if (!parts.length) {
+      return `<div class="placeholder"><div><div class="ico">▢</div>${esc(title)}</div></div>`;
+    }
+    return `<div class="proj-media">${parts.join("")}</div>`;
+  }
+
   function openProject(card) {
-    const { title, type, tag, desc, link, img } = card.dataset;
+    const { title, type, tag, desc, link } = card.dataset;
+    const project = projectsById[card.dataset.id] || {};
     overlayTag.textContent   = tag   || "";
     overlayTitle.textContent = title || "";
     overlayType.textContent  = type  || "";
@@ -215,9 +253,8 @@
     overlayLink.href         = (link && link !== "#") ? link : "#";
     overlayLink.style.display = (link && link !== "#") ? "" : "none";
 
-    overlayVisual.innerHTML = img
-      ? `<img src="${img}" alt="${title}">`
-      : `<div class="placeholder"><div><div class="ico">▢</div>${title}</div></div>`;
+    overlayVisual.innerHTML = buildVisual(project, title);
+    overlayVisual.scrollTop = 0;
 
     overlay.setAttribute("aria-hidden", "false");
     overlay.classList.add("open");
@@ -227,6 +264,8 @@
   }
 
   function closeProject() {
+    const vid = overlayVisual.querySelector("video");
+    if (vid) vid.pause();
     overlay.classList.remove("open");
     overlay.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";

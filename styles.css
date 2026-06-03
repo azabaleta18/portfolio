@@ -1061,7 +1061,7 @@ img, svg { display: block; max-width: 100%; }
   position: relative;
   background: #fff;
   border-right: 1px solid var(--line);
-  overflow: hidden;
+  overflow-y: auto;
 }
 .proj-visual .placeholder {
   position: absolute;
@@ -1078,13 +1078,34 @@ img, svg { display: block; max-width: 100%; }
   text-align: center;
 }
 .proj-visual .placeholder .ico { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
-.proj-visual img {
-  position: absolute;
-  inset: 0;
+
+/* media stack: video + portada + galería */
+.proj-media { display: flex; flex-direction: column; }
+.proj-video {
   width: 100%;
-  height: 100%;
+  display: block;
+  background: #000;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.proj-cover {
+  width: 100%;
+  display: block;
   object-fit: cover;
   object-position: center top;
+}
+.proj-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+.proj-gallery img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  display: block;
 }
 
 /* info panel */
