@@ -758,55 +758,34 @@ img, svg { display: block; max-width: 100%; }
   gap: 24px;
   position: relative;
 }
-/* connector line */
+/* connector line — draws once, behind icons, never touches text */
 .why-grid::before {
   content: '';
   position: absolute;
-  top: 19px; /* center of 38px icons */
+  top: 19px; /* vertical center of the 38px icon row */
   left: 0; right: 0;
   height: 1px;
   background: linear-gradient(90deg,
-    transparent,
-    rgba(45,138,147,0.25) 12%,
-    rgba(45,138,147,0.25) 88%,
-    transparent
+    transparent 2%,
+    rgba(45,138,147,0.22) 10%,
+    rgba(45,138,147,0.22) 90%,
+    transparent 98%
   );
   transform: scaleX(0);
   transform-origin: left;
-  z-index: 0;
+  z-index: 0; /* behind .ic (z-index:1) */
 }
 .why.in .why-grid::before {
-  animation: why-line-in 1s cubic-bezier(0.16,1,0.3,1) 0.4s both;
+  animation: why-line-in 2s ease-out 0.4s both;
 }
 @keyframes why-line-in {
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
 }
 
-/* traveling highlight — loops after line draws in */
-.why-grid::after {
-  content: '';
-  position: absolute;
-  top: 17px;
-  left: 0;
-  width: 28%;
-  height: 3px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, transparent, rgba(45,138,147,0.85) 40%, rgba(45,138,147,0.85) 60%, transparent);
-  transform: translateX(-100%);
-  pointer-events: none;
-  z-index: 1;
-}
-.why.in .why-grid::after {
-  animation: why-travel 3.5s ease-in-out 1.6s infinite;
-}
-@keyframes why-travel {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(358%); }
-}
-
+/* icon-top layout so the line never crosses text */
 .why-item {
-  display: flex; gap: 14px; align-items: flex-start;
+  display: flex; flex-direction: column; gap: 12px;
 }
 .why-item .ic {
   width: 38px; height: 38px;
@@ -819,11 +798,30 @@ img, svg { display: block; max-width: 100%; }
   position: relative;
   z-index: 1;
 }
+/* ring that lights up as the line "arrives" at each icon */
+.why-item .ic::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 13px;
+  border: 1.5px solid rgba(45,138,147,0.28);
+  opacity: 0;
+  pointer-events: none;
+}
+@keyframes why-ring-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.why.in .why-item--pulse .ic::after { animation: why-ring-in 0.5s ease-out 0.4s both; }
+.why.in .why-item--tick  .ic::after { animation: why-ring-in 0.5s ease-out 1.0s both; }
+.why.in .why-item--check .ic::after { animation: why-ring-in 0.5s ease-out 1.6s both; }
+.why.in .why-item--float .ic::after { animation: why-ring-in 0.5s ease-out 2.2s both; }
+
 .why-item .ic svg { width: 18px; height: 18px; }
 .why-item h5 { font-size: 14.5px; font-weight: 600; margin: 0 0 4px; }
 .why-item p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.5; }
 
-/* icon animations */
+/* icon loop animations */
 @keyframes why-pulse {
   0%, 100% { transform: scale(1);     box-shadow: var(--shadow-sm); }
   50%       { transform: scale(1.13); box-shadow: 0 4px 14px -4px rgba(45,138,147,0.3); }
@@ -833,10 +831,9 @@ img, svg { display: block; max-width: 100%; }
   35%      { transform: rotate(20deg); }
   45%      { transform: rotate(17deg); }
 }
-/* rotate only the SVG hands around the clock center */
 .clock-hands {
-  transform-box: view-box;   /* reference = SVG viewport (0 0 24 24) */
-  transform-origin: 50% 50%; /* center = 12,12 = clock face center    */
+  transform-box: view-box;
+  transform-origin: 50% 50%;
   animation: why-tick-hand 5s ease-in-out 1s infinite;
 }
 @keyframes why-check {
@@ -854,19 +851,19 @@ img, svg { display: block; max-width: 100%; }
 
 @media (prefers-reduced-motion: reduce) {
   .why-grid::before,
-  .why-grid::after,
   .clock-hands,
   .why-item--pulse .ic,
   .why-item--check .ic,
   .why-item--float .ic { animation: none; transform: none; }
+  .why-item .ic::after  { animation: none; opacity: 1; }
   .why.in .why-grid::before { transform: scaleX(1); }
-  .why.in .why-grid::after  { transform: translateX(0); opacity: 0; }
 }
 
 @media (max-width: 800px) {
   .why { padding: 28px; }
   .why-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-  .why-grid::before { display: none; }
+  .why-grid::before,
+  .why-item .ic::after { display: none; }
 }
 @media (max-width: 480px) {
   .why-grid { grid-template-columns: 1fr; }
