@@ -300,22 +300,13 @@
     if (steps.length < 2) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const STEP_MS  = 1500;
-    // left position of the glow segment for each step (segment to the next step)
-    const SEG_LEFTS = ['12.5%', '37.5%', '62.5%'];
-
-    let current = -1;
-    let timer   = null;
+    const STEP_MS = 1500;
+    let current   = -1;
+    let timer     = null;
 
     function activate(idx) {
       current = idx;
       steps.forEach((s, i) => s.classList.toggle('is-active', i === idx));
-      if (idx < steps.length - 1) {
-        proc.style.setProperty('--seg-left', SEG_LEFTS[idx]);
-        proc.classList.add('proc-running');
-      } else {
-        proc.classList.remove('proc-running'); // last step: no forward segment
-      }
     }
 
     function startCycle() {
@@ -332,7 +323,6 @@
       timer = null;
       current = -1;
       steps.forEach(s => s.classList.remove('is-active'));
-      proc.classList.remove('proc-running');
     }
 
     new IntersectionObserver(entries => {

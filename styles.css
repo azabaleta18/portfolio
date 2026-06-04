@@ -731,52 +731,15 @@ img, svg { display: block; max-width: 100%; }
   max-width: 220px;
 }
 
-/* static dashed base line */
-.process::before {
-  content: "";
-  position: absolute;
-  top: 46px;
-  left: 12.5%;
-  right: 12.5%;
-  height: 1px;
-  background-image: linear-gradient(to right, var(--line) 50%, transparent 50%);
-  background-size: 10px 1px;
-  background-repeat: repeat-x;
-  z-index: 1;
-}
-/* animated glow segment — moves left→right as steps activate */
-.process::after {
-  content: '';
-  position: absolute;
-  top: 45px;
-  left: var(--seg-left, 12.5%);
-  width: 25%;
-  height: 2px;
-  border-radius: 2px;
-  background: linear-gradient(90deg,
-    rgba(45,138,147,0)    0%,
-    rgba(45,138,147,0.55) 20%,
-    rgba(45,138,147,0.55) 80%,
-    rgba(45,138,147,0)    100%
-  );
-  opacity: 0;
-  transition: left 0.55s var(--ease-out-expo), opacity 0.4s ease;
-  z-index: 2;
-  pointer-events: none;
-}
-.proc-running::after { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .process-step .icwrap,
   .process-step h4 { transition: none; }
   .process-step.is-active .icwrap { transform: none; box-shadow: none; }
-  .process::after { display: none; }
 }
 
 @media (max-width: 800px) {
   .process { grid-template-columns: repeat(2, 1fr); gap: 28px 12px; }
-  .process::before,
-  .process::after { display: none; }
 }
 
 /* =========================================================
