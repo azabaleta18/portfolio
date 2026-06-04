@@ -7,8 +7,8 @@
   // ===================================================================
   // SUPABASE CONFIG — reemplazá con los valores de tu proyecto
   // ===================================================================
-  const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co';
-  const SUPABASE_KEY = 'TU_ANON_KEY';
+  const SUPABASE_URL = 'https://ffjryzlfwivkfkxbupzp.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmanJ5emxmd2l2a2ZreGJ1cHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1Mjg5NjAsImV4cCI6MjA5NjEwNDk2MH0.dPsTMNBnKEZcOZB6fVSaKgs8W_7XRSn3ry2vsHT0HKA';
   // ===================================================================
 
   // ---------- Smooth scroll (lerp) ----------
