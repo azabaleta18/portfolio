@@ -1188,8 +1188,8 @@ img, svg { display: block; max-width: 100%; }
   object-position: center top;
 }
 .proj-gallery {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   padding: 12px;
 }
@@ -1198,6 +1198,10 @@ img, svg { display: block; max-width: 100%; }
   height: auto;
   display: block;
   border-radius: var(--radius-sm);
+  grid-column: span 2; /* landscape: full width by default */
+}
+.proj-gallery img.portrait {
+  grid-column: span 1; /* portrait: half width, 2 per row */
 }
 
 /* info panel */

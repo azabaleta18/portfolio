@@ -256,6 +256,12 @@
     overlayVisual.innerHTML = buildVisual(project, title);
     overlayVisual.scrollTop = 0;
 
+    // mark portrait images so CSS can display them 2-per-row
+    overlayVisual.querySelectorAll('.proj-gallery img').forEach(img => {
+      const tag = () => { if (img.naturalHeight > img.naturalWidth) img.classList.add('portrait'); };
+      img.complete ? tag() : img.addEventListener('load', tag, { once: true });
+    });
+
     overlay.setAttribute("aria-hidden", "false");
     overlay.classList.add("open");
     document.body.style.overflow = "hidden";
