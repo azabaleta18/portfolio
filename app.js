@@ -292,6 +292,55 @@
     if (overlay.classList.contains("open")) closeProject();
   });
 
+  // ---------- Process step sequencer ----------
+  (function() {
+    const section = document.querySelector('#proceso');
+    const proc    = section && section.querySelector('.process');
+    const steps   = proc ? Array.from(proc.querySelectorAll('.process-step')) : [];
+    if (steps.length < 2) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const STEP_MS  = 1500;
+    // left position of the glow segment for each step (segment to the next step)
+    const SEG_LEFTS = ['12.5%', '37.5%', '62.5%'];
+
+    let current = -1;
+    let timer   = null;
+
+    function activate(idx) {
+      current = idx;
+      steps.forEach((s, i) => s.classList.toggle('is-active', i === idx));
+      if (idx < steps.length - 1) {
+        proc.style.setProperty('--seg-left', SEG_LEFTS[idx]);
+        proc.classList.add('proc-running');
+      } else {
+        proc.classList.remove('proc-running'); // last step: no forward segment
+      }
+    }
+
+    function startCycle() {
+      let step = 0;
+      activate(step);
+      timer = setInterval(() => {
+        step = (step + 1) % steps.length;
+        activate(step);
+      }, STEP_MS);
+    }
+
+    function stopCycle() {
+      clearInterval(timer);
+      timer = null;
+      current = -1;
+      steps.forEach(s => s.classList.remove('is-active'));
+      proc.classList.remove('proc-running');
+    }
+
+    new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) startCycle();
+      else stopCycle();
+    }, { threshold: 0.3 }).observe(section);
+  })();
+
   // ---------- Contact form ----------
   const form = document.querySelector(".contact-form");
   if (form) {
