@@ -783,6 +783,28 @@ img, svg { display: block; max-width: 100%; }
   to   { transform: scaleX(1); }
 }
 
+/* traveling highlight — loops after line draws in */
+.why-grid::after {
+  content: '';
+  position: absolute;
+  top: 17px;
+  left: 0;
+  width: 28%;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(45,138,147,0.85) 40%, rgba(45,138,147,0.85) 60%, transparent);
+  transform: translateX(-100%);
+  pointer-events: none;
+  z-index: 1;
+}
+.why.in .why-grid::after {
+  animation: why-travel 3.5s ease-in-out 1.6s infinite;
+}
+@keyframes why-travel {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(358%); }
+}
+
 .why-item {
   display: flex; gap: 14px; align-items: flex-start;
 }
@@ -806,10 +828,16 @@ img, svg { display: block; max-width: 100%; }
   0%, 100% { transform: scale(1);     box-shadow: var(--shadow-sm); }
   50%       { transform: scale(1.13); box-shadow: 0 4px 14px -4px rgba(45,138,147,0.3); }
 }
-@keyframes why-tick {
-  0%, 85%, 100% { transform: rotate(0deg); }
-  90%           { transform: rotate(7deg); }
-  95%           { transform: rotate(5deg); }
+@keyframes why-tick-hand {
+  0%, 100% { transform: rotate(0deg); }
+  35%      { transform: rotate(20deg); }
+  45%      { transform: rotate(17deg); }
+}
+/* rotate only the SVG hands around the clock center */
+.clock-hands {
+  transform-box: view-box;   /* reference = SVG viewport (0 0 24 24) */
+  transform-origin: 50% 50%; /* center = 12,12 = clock face center    */
+  animation: why-tick-hand 5s ease-in-out 1s infinite;
 }
 @keyframes why-check {
   0%, 100% { transform: scale(1)    rotate(0deg); }
@@ -820,18 +848,19 @@ img, svg { display: block; max-width: 100%; }
   50%      { transform: translateY(-5px); }
 }
 
-.why-item--pulse .ic { animation: why-pulse 4s   ease-in-out 0s    infinite; }
-.why-item--tick  .ic { animation: why-tick  5s   ease-in-out 1s    infinite; }
-.why-item--check .ic { animation: why-check 4.5s ease-in-out 1.8s  infinite; }
-.why-item--float .ic { animation: why-float 4s   ease-in-out 2.6s  infinite; }
+.why-item--pulse .ic { animation: why-pulse 4s   ease-in-out 0s   infinite; }
+.why-item--check .ic { animation: why-check 4.5s ease-in-out 1.8s infinite; }
+.why-item--float .ic { animation: why-float 4s   ease-in-out 2.6s infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   .why-grid::before,
+  .why-grid::after,
+  .clock-hands,
   .why-item--pulse .ic,
-  .why-item--tick  .ic,
   .why-item--check .ic,
   .why-item--float .ic { animation: none; transform: none; }
   .why.in .why-grid::before { transform: scaleX(1); }
+  .why.in .why-grid::after  { transform: translateX(0); opacity: 0; }
 }
 
 @media (max-width: 800px) {
